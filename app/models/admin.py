@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 from app.db import Session, crud, get_db
 from app.utils.jwt import get_admin_payload
@@ -26,7 +26,8 @@ class Admin(BaseModel):
     users_usage: Optional[int]
 
     class Config:
-        orm_mode = True
+        # orm_mode = True will allow us to pass an ORM object to the model
+        from_attributes = True
 
     @classmethod
     def get_admin(cls, token: str, db: Session):
@@ -90,7 +91,7 @@ class AdminCreate(Admin):
     def hashed_password(self):
         return pwd_context.hash(self.password)
 
-    @validator("discord_webhook")
+    @field_validator("discord_webhook")
     def validate_discord_webhook(cls, value):
         if value and not value.startswith("https://discord.com"):
             raise ValueError("Discord webhook must start with 'https://discord.com'")
@@ -108,7 +109,7 @@ class AdminModify(BaseModel):
         if self.password:
             return pwd_context.hash(self.password)
 
-    @validator("discord_webhook")
+    @field_validator("discord_webhook")
     def validate_discord_webhook(cls, value):
         if value and not value.startswith("https://discord.com"):
             raise ValueError("Discord webhook must start with 'https://discord.com'")

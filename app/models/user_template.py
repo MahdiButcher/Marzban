@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional, Union
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, validator
 
 from app import xray
 from app.models.proxy import ProxyTypes
@@ -22,7 +22,7 @@ class UserTemplate(BaseModel):
 
 class UserTemplateCreate(UserTemplate):
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "name": "my template 1",
                 "inbounds": {"vmess": ["VMESS_INBOUND"], "vless": ["VLESS_INBOUND"]},
@@ -34,7 +34,7 @@ class UserTemplateCreate(UserTemplate):
 
 class UserTemplateModify(UserTemplate):
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "name": "my template 1",
                 "inbounds": {"vmess": ["VMESS_INBOUND"], "vless": ["VLESS_INBOUND"]},
@@ -47,7 +47,7 @@ class UserTemplateModify(UserTemplate):
 class UserTemplateResponse(UserTemplate):
     id: int
 
-    @validator("inbounds", pre=True)
+    @field_validator("inbounds", mode="before")
     def validate_inbounds(cls, v):
         final = {}
         inbound_tags = [i.tag for i in v]
@@ -61,4 +61,5 @@ class UserTemplateResponse(UserTemplate):
         return final
 
     class Config:
-        orm_mode = True
+        # orm_mode = True will allow us to pass an ORM object to the model
+        from_attributes = True

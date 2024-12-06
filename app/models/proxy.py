@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Optional, Union
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from app.utils.system import random_password
 from xray_api.types.account import (
@@ -60,8 +60,8 @@ class ProxySettings(BaseModel):
 
     def dict(self, *, no_obj=False, **kwargs):
         if no_obj:
-            return json.loads(self.json())
-        return super().dict(**kwargs)
+            return json.loads(self.model_dump_json())
+        return super().model_dump(**kwargs)
 
 
 class VMessSettings(ProxySettings):
@@ -156,9 +156,10 @@ class ProxyHost(BaseModel):
     random_user_agent: Union[bool, None] = None
 
     class Config:
-        orm_mode = True
+        # orm_mode = True will allow us to pass an ORM object to the model
+        from_attributes = True
 
-    @validator("remark", pre=False, always=True)
+    @field_validator("remark", mode="after")
     def validate_remark(cls, v):
         try:
             v.format_map(FormatVariables())
@@ -167,7 +168,7 @@ class ProxyHost(BaseModel):
 
         return v
 
-    @validator("address", pre=False, always=True)
+    @field_validator("address", mode="after")
     def validate_address(cls, v):
         try:
             v.format_map(FormatVariables())
@@ -176,7 +177,7 @@ class ProxyHost(BaseModel):
 
         return v
 
-    @validator("fragment_setting", check_fields=False)
+    @field_validator("fragment_setting", check_fields=False)
     def validate_fragment(cls, v):
         if v and not FRAGMENT_PATTERN.match(v):
             raise ValueError(
@@ -184,7 +185,7 @@ class ProxyHost(BaseModel):
             )
         return v
 
-    @validator("noise_setting", check_fields=False)
+    @field_validator("noise_setting", check_fields=False)
     def validate_noise(cls, v):
         if v:
             if not NOISE_PATTERN.match(v):

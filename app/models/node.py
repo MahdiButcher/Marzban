@@ -28,7 +28,7 @@ class NodeCreate(Node):
     add_as_new_host: bool = True
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "name": "DE node",
                 "address": "192.168.1.1",
@@ -49,7 +49,7 @@ class NodeModify(Node):
     usage_coefficient: Optional[float] = Field(None, nullable=True)
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "name": "DE node",
                 "address": "192.168.1.1",
@@ -68,7 +68,8 @@ class NodeResponse(Node):
     message: Optional[str]
 
     class Config:
-        orm_mode = True
+        # orm_mode = True will allow us to pass an ORM object to the model
+        from_attributes = True
 
 
 class NodeUsageResponse(BaseModel):
